@@ -21,9 +21,23 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI, APIRouter
 
-# Atlas linkini shu yerga qo'ying (parol bilan birga)
-# DB_NAME ni 'mental_mentor_db' qilib belgilaymiz
-DEFAULT_MONGO_URL = "mongodb+srv://jahongir7amonov136_db_user:zmWW4x2FbET2UoEE@cluster0.vqoau0l.mongodb.net/mental_mentor_db?retryWrites=true&w=majority&appName=Cluster0"
+# To'g'rilangan MongoDB ulanish qismi (vqozu0l - to'g'ri variant)
+DEFAULT_MONGO_URL = "mongodb+srv://jahongir7amonov136_db_user:zmWW4x2FbET2UoEE@cluster0.vqozu0l.mongodb.net/mental_mentor_db?retryWrites=true&w=majority"
+
+mongo_url = os.environ.get("MONGO_URL", DEFAULT_MONGO_URL)
+db_name = os.environ.get("DB_NAME", "mental_mentor_db")
+
+# Ulanish barqarorligi uchun timeout va DNS sozlamalari bilan
+try:
+    client = AsyncIOMotorClient(
+        mongo_url, 
+        serverSelectionTimeoutMS=5000,
+        tlsAllowInvalidCertificates=True
+    )
+    db = client[db_name]
+    print("✅ MongoDB ulanish sozlamalari muvaffaqiyatli yuklandi")
+except Exception as e:
+    print(f"❌ MongoDB ulanishida xatolik yuz berdi: {e}")
 
 mongo_url = os.environ.get("MONGO_URL", DEFAULT_MONGO_URL)
 db_name = os.environ.get("DB_NAME", "mental_mentor_db")
