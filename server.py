@@ -5,14 +5,8 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
 import os
-import logging
-import uuid
-import bcrypt
-import jwt
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Literal
-
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
+from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
@@ -21,11 +15,40 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI, APIRouter
 
-# To'g'rilangan MongoDB ulanish qismi (vqozu0l - to'g'ri variant)
+# 1. MongoDB ulanish sozlamalari (Faqat bitta blok qolsin)
 DEFAULT_MONGO_URL = "mongodb+srv://jahongir7amonov136_db_user:zmWW4x2FbET2UoEE@cluster0.vqozu0l.mongodb.net/mental_mentor_db?retryWrites=true&w=majority"
-
 mongo_url = os.environ.get("MONGO_URL", DEFAULT_MONGO_URL)
 db_name = os.environ.get("DB_NAME", "mental_mentor_db")
+
+try:
+    client = AsyncIOMotorClient(
+        mongo_url, 
+        serverSelectionTimeoutMS=5000,
+        tlsAllowInvalidCertificates=True
+    )
+    db = client[db_name]
+    print("✅ MongoDB ulanish sozlamalari muvaffaqiyatli yuklandi")
+except Exception as e:
+    print(f"❌ MongoDB ulanishida xatolik yuz berdi: {e}")
+
+# 2. FastAPI ilovasini yaratish
+app = FastAPI(title="21-ASR Raqamli Xizmatlar Markazi API")
+api_router = APIRouter(prefix="/api")
+
+# ... (bu yerda sizning qolgan routelaringiz va funksiyalaringiz turishi kerak) ...
+
+# 3. Startup va Shutdown eventlari
+@app.on_event("startup")
+async def startup_event():
+    # Bu yerda indekslar yaratish kodi bo'lishi mumkin
+    pass
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    client.close()
+
+# 4. Routerni ulash (Faqat bir marta!)
+app.include_router(api_router)
 
 # Ulanish barqarorligi uchun timeout va DNS sozlamalari bilan
 try:
